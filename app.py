@@ -9,7 +9,7 @@ st.title("🛍️ Nykaa Delivery Speed Checker")
 st.write("Enter a product to search for and the pincodes to check.")
 
 # --- 1. User Inputs ---
-search_term = st.text_input("Product Search Term", "e.g., H&M Women Straight High Jeans")
+search_term = st.text_input("Product Search Term", "H&M Women Straight High Jeans")
 pincodes_input = st.text_area("Enter Pincodes (one per line)", "201301\n700020\n600100")
 
 # --- 2. Run Button ---
