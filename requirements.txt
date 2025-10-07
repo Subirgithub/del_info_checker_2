@@ -5,6 +5,6 @@ io
 re
 time
 datetime
-playwright.async_api
+playwright
 traceback
 random
