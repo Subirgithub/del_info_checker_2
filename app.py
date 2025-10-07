@@ -1,4 +1,19 @@
 import streamlit as st
+import subprocess
+import sys
+
+# Use a Streamlit decorator to run this only once, when the app starts.
+@st.cache_resource
+def install_playwright():
+    """Installs playwright browsers."""
+    print("Starting Playwright browser installation...")
+    # The command Playwright itself recommended in the error logs
+    subprocess.run([f"{sys.executable}", "-m", "playwright", "install"], check=True)
+    print("Playwright browsers installed successfully.")
+
+# Call the installation function at the start of the app
+install_playwright()
+
 import pandas as pd
 import asyncio
 from Scraper_nykaa import main_scraper_func  # Assume you refactor your main() into this
