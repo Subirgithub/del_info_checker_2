@@ -184,11 +184,6 @@ def extract_delivery_date(row):
     return delivery_dt
 
 
-# In[10]:
-
-
-from fake_useragent import UserAgent
-
 
 # In[11]:
 
