@@ -20,7 +20,7 @@ import re
 import time
 from datetime import date,datetime
 from playwright.async_api import async_playwright, TimeoutError, expect
-from playwright_stealth import Stealth
+#from playwright_stealth import Stealth
 import traceback
 import os
 import random
