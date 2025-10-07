@@ -415,7 +415,7 @@ async def main():
         consecutive_url_failures = 0
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(channel="chrome", headless=False)
+            browser = await p.chromium.launch(headless=True)
 
             # MODIFIED: Group by the product's name/search term instead of URL
             for search_term, group in tasks_df.groupby('style_name'):
