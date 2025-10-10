@@ -477,7 +477,8 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
 
         # NOTE: For deployment (e.g., Streamlit Cloud), change headless=False to headless=True
         async with async_playwright() as p:
-            browser = await p.chromium.launch(channel="chrome", headless=False)
+           # browser = await p.chromium.launch(channel="chrome", headless=False)
+            browser = await p.chromium.launch(headless=False)
 
             for search_term, group in tasks_df.groupby('style_name'):
                 if consecutive_url_failures >= 3:
