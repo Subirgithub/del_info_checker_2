@@ -20,7 +20,7 @@ from playwright.async_api import async_playwright, TimeoutError, expect
 import traceback
 import os
 import random
-from playwright_stealth import stealth_async
+#from playwright_stealth import stealth_async
 #os.chdir('/Users/subir.paul2/Desktop/Work/Myntra/Crawl')
 #print("Current Working Directory:", os.getcwd())
 
@@ -491,7 +491,7 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
                                                     permissions=['geolocation']) 
                 page = await context.new_page()
 
-                await stealth_async(page)
+                #await stealth_async(page)
 
                 try:
                     site = group.iloc[0]["site_name"]
