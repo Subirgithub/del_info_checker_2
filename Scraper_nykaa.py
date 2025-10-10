@@ -20,6 +20,7 @@ from playwright.async_api import async_playwright, TimeoutError, expect
 import traceback
 import os
 import random
+from playwright_stealth import stealth_async
 #os.chdir('/Users/subir.paul2/Desktop/Work/Myntra/Crawl')
 #print("Current Working Directory:", os.getcwd())
 
@@ -485,8 +486,12 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
                     print("\n!!! 3 consecutive URL failures. Aborting this pass. !!!")
                     break
 
-                context = await browser.new_context() # user_agent=random.choice(USER_AGENTS)
+                context = await browser.new_context(user_agent=random.choice(USER_AGENTS),
+                                                    geolocation={'longitude': 77.216721, 'latitude': 28.644800}, # Example: New Delhi
+                                                    permissions=['geolocation']) 
                 page = await context.new_page()
+
+                await stealth_async(page)
 
                 try:
                     site = group.iloc[0]["site_name"]
