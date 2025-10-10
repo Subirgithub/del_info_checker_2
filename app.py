@@ -24,7 +24,7 @@ st.title("🛍️ Nykaa Delivery Speed Checker")
 st.write("Enter a product to search for and the pincodes to check.")
 
 # --- 1. User Inputs ---
-search_term = st.text_input("Product Search Term", "H&M Women Straight High Jeans")
+search_term = st.text_input("Product Search Term", "M.A.C MACximal Matte Lipstick")
 pincodes_input = st.text_area("Enter Pincodes (one per line)", "201301\n700020\n600100")
 
 # --- 2. Run Button ---
@@ -51,7 +51,9 @@ if st.button("🚀 Get Delivery Speeds"):
             # --- 4. Display Results ---
             st.success("Scraping complete!")
             st.dataframe(results_df)
-
+            
+            results_df.to_csv("delivery_speed_nykaa.csv", index=False)
+            print("\nScraping complete. Results saved to 'delivery_speed_nykaa.csv'")
             # Optional: Add a download button for the results
             csv = results_df.to_csv(index=False).encode('utf-8')
             st.download_button(
