@@ -12,7 +12,7 @@ def install_playwright():
     print("Playwright browsers installed successfully.")
 
 # Call the installation function at the start of the app
-install_playwright()
+#install_playwright()
 
 import pandas as pd
 import asyncio
