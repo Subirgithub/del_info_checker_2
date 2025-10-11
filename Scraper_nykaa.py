@@ -1,18 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-#from playwright.async_api import async_playwright
-#from playwright_stealth import stealth_async
-#from playwright_stealth.stealth import stealth_async
-
-
-# In[2]:
-
-
-#import traceback
+import traceback
 import asyncio
 import pandas as pd
 import io
@@ -24,9 +13,6 @@ from playwright.async_api import async_playwright, TimeoutError, expect
 import traceback
 import os
 import random
-
-
-# In[132]:
 
 
 #creating the input dataframe for crawling Nykaa
@@ -175,8 +161,6 @@ SITE_CONFIG = {
     }
 }
 
-
-# In[ ]:
 
 
 def extract_delivery_date(row):
@@ -394,7 +378,7 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
         consecutive_url_failures = 0
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(channel="chrome", headless=True)
+            browser = await p.chromium.launch(headless=True)
 
             for url, group in tasks_df.groupby('product_url'):
                 if consecutive_url_failures >= 3:
