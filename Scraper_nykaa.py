@@ -388,6 +388,7 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True,
                                               proxy={"server": proxy_server_url})
+            
 
             for url, group in tasks_df.groupby('product_url'):
                 if consecutive_url_failures >= 3:
@@ -396,7 +397,20 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
 
                 context = await browser.new_context(user_agent=random.choice(USER_AGENTS),
                                                     ignore_https_errors=True)
+                
+                # --- CHANGE 1: USE A FULL DEVICE PROFILE ---
+                # This emulates a real 'Desktop Chrome' browser, setting dozens of realistic properties.
+                # This is more effective than just setting a user-agent.
+                context = await browser.new_context(
+                    **p.devices['Desktop Chrome'],
+                    ignore_https_errors=True
+                )
+
                 page = await context.new_page()
+
+                # --- CHANGE 2: MANUALLY HIDE THE WEBDriver FLAG ---
+                # This JS script runs before the page's scripts, hiding the "I am a bot" flag.
+                await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
                 try:
                     site = group.iloc[0]["site_name"]
