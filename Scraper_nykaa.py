@@ -403,7 +403,7 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
                     style_name = group.iloc[0]["style_name"]
                     print(f"\n[Pass {pass_num}] Navigating to {style_name} on {site}...")
 
-                    await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                    await page.goto(url, wait_until="domcontentloaded", timeout=120000)
                     consecutive_url_failures = 0
 
                     # Check if the product is unavailable before checking pincodes.
@@ -465,6 +465,9 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
 
                 except Exception as e:
                     print(f"!!! Failed to process URL {url}. Error: {e}")
+                    if page:
+                        await page.screenshot(path='error_screenshot.png')
+                        print("Saved screenshot to error_screenshot.png")
                     consecutive_url_failures += 1
                     for _, row in group.iterrows():
                         all_results_list.append({
