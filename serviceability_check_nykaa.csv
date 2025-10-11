@@ -1,4 +1,13 @@
 style_name,site_name,product_url,pincode,delivery_info,secondary_delivery_info,scrape_date,delivery_date,days_to_delivery
-M.A.C MACximal Matte Lipstick,Nykaa,https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061,191121,Does not ship to pincode,,2025-10-11,,
-M.A.C MACximal Matte Lipstick,Nykaa,https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061,175123,Does not ship to pincode,,2025-10-11,,
-M.A.C MACximal Matte Lipstick,Nykaa,https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061,226010,"Delivery by Tue, 14 Oct",COD available,2025-10-11,2025-10-14,3.0
+M.A.C MACximal Matte Lipstick,Nykaa,https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061,191121,"Error: Failed to load page - Page.goto: net::ERR_CONNECTION_RESET at https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061
+Call log:
+  - navigating to ""https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061"", waiting until ""domcontentloaded""
+",,2025-10-11,,
+M.A.C MACximal Matte Lipstick,Nykaa,https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061,175123,"Error: Failed to load page - Page.goto: net::ERR_CONNECTION_RESET at https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061
+Call log:
+  - navigating to ""https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061"", waiting until ""domcontentloaded""
+",,2025-10-11,,
+M.A.C MACximal Matte Lipstick,Nykaa,https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061,226010,"Error: Failed to load page - Page.goto: net::ERR_CONNECTION_RESET at https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061
+Call log:
+  - navigating to ""https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061"", waiting until ""domcontentloaded""
+",,2025-10-11,,

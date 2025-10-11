@@ -14,6 +14,14 @@ import traceback
 import os
 import random
 
+# --- Proxy Configuration ---
+# IMPORTANT: It's best practice to store these in your Render Environment Variables.
+PROXY_USERNAME = os.environ.get('PROXY_USERNAME', 'brd-customer-hl_7103f8de-zone-pincode_scraper')
+PROXY_PASSWORD = os.environ.get('PROXY_PASSWORD', 'i7rk9k9oaw9y')
+PROXY_HOST = 'brd.superproxy.io'
+PROXY_PORT = 33335
+
+proxy_server_url = f'http://{PROXY_USERNAME}:{PROXY_PASSWORD}@{PROXY_HOST}:{PROXY_PORT}'
 
 #creating the input dataframe for crawling Nykaa
 data = {
@@ -378,14 +386,16 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
         consecutive_url_failures = 0
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(headless=True,
+                                              proxy={"server": proxy_server_url})
 
             for url, group in tasks_df.groupby('product_url'):
                 if consecutive_url_failures >= 3:
                     print("\n!!! 3 consecutive URL failures. Aborting this pass. !!!")
                     break
 
-                context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+                context = await browser.new_context(user_agent=random.choice(USER_AGENTS),
+                                                    ignore_https_errors=True)
                 page = await context.new_page()
 
                 try:
