@@ -386,7 +386,7 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
         consecutive_url_failures = 0
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True,
+            browser = await p.chromium.launch(headless=True,channel="chrome",
                                               proxy={"server": proxy_server_url})
             
 
@@ -417,7 +417,7 @@ async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
                     style_name = group.iloc[0]["style_name"]
                     print(f"\n[Pass {pass_num}] Navigating to {style_name} on {site}...")
 
-                    await page.goto(url, wait_until="domcontentloaded", timeout=120000)
+                    await page.goto(url, wait_until="domcontentloaded", timeout=60000)
                     consecutive_url_failures = 0
 
                     # Check if the product is unavailable before checking pincodes.
