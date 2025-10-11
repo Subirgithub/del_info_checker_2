@@ -6,24 +6,52 @@
 
 #from playwright.async_api import async_playwright
 #from playwright_stealth import stealth_async
-#from playwright_stealth.stealth import stealth_sync, stealth_async
+#from playwright_stealth.stealth import stealth_async
 
 
-import traceback
+# In[2]:
+
+
+#import traceback
 import asyncio
 import pandas as pd
 import io
 import re
 import time
-from datetime import date,datetime,timedelta
+from datetime import date,datetime
 from playwright.async_api import async_playwright, TimeoutError, expect
+#from playwright_stealth import Stealth
 import traceback
 import os
 import random
-#from playwright_stealth import stealth_async
-#os.chdir('/Users/subir.paul2/Desktop/Work/Myntra/Crawl')
-#print("Current Working Directory:", os.getcwd())
 
+
+# In[132]:
+
+
+#creating the input dataframe for crawling Nykaa
+data = {
+    'style_name': ['M.A.C MACximal Matte Lipstick'],
+    'site_name': ['Nykaa'],
+    'product_url': ['https://www.nykaa.com/m-a-c-macximal-matte-lipstick/p/13784071?productId=13784071&pps=1&skuId=13784061']
+}
+# Create the DataFrame
+df_temp = pd.DataFrame(data)
+
+
+# In[139]:
+
+
+# 1. Create a list of your pincodes
+pincodes = [191121,175123,226010]
+# 2. Convert the list into a pandas DataFrame
+pincode_df = pd.DataFrame(pincodes, columns=['pincode'])
+#3. Perform the cross join
+final_df = df_temp.merge(pincode_df, how='cross')
+#print(final_df)
+
+
+# In[140]:
 
 
 async def human_like_scroll(page):
@@ -45,7 +73,7 @@ async def human_like_scroll(page):
     await page.wait_for_timeout(random.uniform(500, 1000))
 
 
-# In[7]:
+# In[ ]:
 
 
 async def check_and_close_intermittent_popup(page):
@@ -62,7 +90,7 @@ async def check_and_close_intermittent_popup(page):
         pass # This is normal, it just means no pop-up was found        
 
 
-# In[8]:
+# In[ ]:
 
 
 # --- CONFIGURATION: UPDATE SELECTORS HERE WHEN THEY BREAK ---
@@ -103,7 +131,7 @@ SITE_CONFIG = {
     "pincode_input_selector": "input[placeholder='Enter pincode']",
     "pincode_submit_selector": "//button[text()='Check']",
     "unavailable_selector": "//button[normalize-space()='Notify Me']",    
-   # "delivery_info_selector": "//span[contains(text(), 'Delivery by')]"
+    #"delivery_info_selector": "//span[contains(text(), 'Delivery by')]"
     "delivery_info_selectors": [
         {
             "type": "unserviceable", 
@@ -117,8 +145,7 @@ SITE_CONFIG = {
             "type": "secondary_info", 
             "selector": "//span[contains(text(), 'COD available')]"
         }
-    ]
-        
+    ]    
 },
     "Nykaafashion": {
     "initial_popup_close_selector": None,
@@ -149,7 +176,7 @@ SITE_CONFIG = {
 }
 
 
-# In[9]:
+# In[ ]:
 
 
 def extract_delivery_date(row):
@@ -196,8 +223,7 @@ def extract_delivery_date(row):
     return delivery_dt
 
 
-
-# In[11]:
+# In[ ]:
 
 
 USER_AGENTS = [
@@ -208,7 +234,7 @@ USER_AGENTS = [
 ]
 
 
-# In[12]:
+# In[142]:
 
 
 async def scrape_pincode_on_page(page, site, pincode):
@@ -278,34 +304,34 @@ async def scrape_pincode_on_page(page, site, pincode):
             # --- Data Extraction ---
             # Initialize a dictionary to hold the results.
             results = {"primary": "Not found", "secondary": ""}
-            
+
             # Get the prioritized list of selectors from your config.
             delivery_selectors = config.get("delivery_info_selectors", [])
-            
+
             # Loop through each selector in the order they are listed.
             for item in delivery_selectors:
                 item_type = item["type"]
                 selector = item["selector"]
-                
+
                 try:
                     # Use a short timeout to quickly check if the element is visible.
                     element = page.locator(selector).first
                     await element.wait_for(state="visible", timeout=5000)
-                    
+
                     # If the element is found, grab its text.
                     text_content = (await element.inner_text()).strip()
-                    
+
                     if item_type == "primary_delivery":
                         results["primary"] = text_content
-                        
+
                     elif item_type == "unserviceable":
                         results["primary"] = text_content
                         # This is a final status. We can stop checking.
                         break
-                        
+
                     elif item_type == "secondary_info":
                         results["secondary"] = text_content
-                
+
                 except Exception:
                     # It's normal for a selector not to be found. Just move to the next one.
                     pass
@@ -327,280 +353,176 @@ async def scrape_pincode_on_page(page, site, pincode):
     return {"primary": "Error: All retry attempts failed.", "secondary": ""}
 
 
-#async def search_and_scrape_nykaa(page, search_term, pincode_group):
-async def search_and_scrape_nykaa(page, site, search_term, pincode_group):   
-    """
-    Searches for a product on Nykaa, clicks the first result, 
-    and then scrapes delivery speeds for a group of pincodes.
-    """
-    print(f"--- Searching for '{search_term}' on Nykaa... ---")
-
-    # 1. Navigate to the homepage
-   # await page.goto("https://www.nykaa.com/", wait_until="domcontentloaded")
-    await page.goto("https://www.nykaa.com/skin/masks/c/8399/", wait_until="domcontentloaded", timeout=60000)
-    #await page.goto("https://www.nykaa.com/skin/masks/c/8399/", wait_until="networkidle", timeout=60000)
-
-    # 2. Find and click the search bar to ensure it's focused
-    search_bar = page.locator('input[placeholder="Search on Nykaa"]')
-    await search_bar.click()
-
-    # ADD a deliberate pause AFTER clicking but BEFORE typing.
-    # This gives the website's JavaScript time to prepare for input.
-    print("--- Pausing after click to let the search bar initialize... ---")
-    await page.wait_for_timeout(1000)  # Pause for 1 second
-    
-    
-    # 3. Use press_sequentially to simulate a user typing
-    print(f"--- Typing '{search_term}' into search bar... ---")
-    await search_bar.press_sequentially(search_term, delay=random.randint(200, 400))
-
-    # 4. Press Enter to submit the search
-    await search_bar.press("Enter")
-
-    # --- START OF FIX ---
-    # ADD a robust wait here. 'networkidle' waits for the page to finish loading dynamic content.
-    print("--- Search submitted. Waiting for results page to fully load... ---")
-    await page.wait_for_load_state("domcontentloaded", timeout=30000)
-    # --- END OF FIX ---
-
-    # 3. Wait for search results
-    print("--- Waiting for search results... ---")
-    first_result = page.locator(".css-xrzmfa").first
-    await first_result.wait_for(state="visible", timeout=15000)
-
-    # --- START OF MODIFICATION ---
-    # Prepare to capture the new page that opens after the click
-    print("--- Expecting a new page to open... ---")
-    async with page.context.expect_page() as new_page_info:
-        await first_result.click()  # This action triggers the new page
-
-    # Get the new page object from the event
-    new_page = await new_page_info.value
-    print(f"--- Switched focus to new page: {new_page.url} ---")
-
-    # All subsequent actions must use this 'new_page' object
-    await new_page.wait_for_load_state("domcontentloaded", timeout=20000)
-    # --- END OF MODIFICATION ---
-
-    print(f"--- Landed on product page for '{search_term}'. Starting pincode checks. ---")
-
-    # After the page has loaded, check for and close any pop-ups.
-    await check_and_close_intermittent_popup(new_page)
-    # 5. Loop through the pincodes for this product and scrape the data
-    group_results = []
-
-    # Check if the product is unavailable before checking pincodes.
-    config = SITE_CONFIG.get(site, {})
-    unavailable_selector = config.get("unavailable_selector")
-    if unavailable_selector:
-        try:
-            # Use a short timeout to quickly check for the "Notify Me" button.
-            await new_page.locator(unavailable_selector).first.wait_for(state="visible", timeout=1000)
-            print(f"--- Product is unavailable. Skipping all pincodes for this URL. ---")
-            # Mark all pincodes for this URL as unavailable and return immediately.
-            for _, row in pincode_group.iterrows():
-                group_results.append({
-                    "style_name": row["style_name"], "site_name": site,
-                    "product_url": new_page.url, "pincode": row["pincode"],
-                    "delivery_info": "Product Unavailable", "secondary_delivery_info": ""
-                })
-            return group_results # Skip to the next product
-        except Exception:
-            # If the selector is not found, the product is available. Proceed normally.
-            pass
-
-    consecutive_pincode_failures = 0
-    #site = "Nykaa"
-
-    for _, row in pincode_group.iterrows():
-        if consecutive_pincode_failures >= 5:
-            print(f"--- Aborting remaining pincodes for {search_term} due to failures. ---")
-            break
-
-        pincode = str(row["pincode"])
-        # MODIFIED: Pass the 'new_page' object to your scraping function
-        delivery_data = await scrape_pincode_on_page(new_page, site, pincode)
-
-        result = {
-        #    "master_category": row["master_category"], "article_type": row["article_type"],
-            "style_name": row["style_name"], "site_name": site,
-            "product_url": new_page.url, "pincode": pincode,
-            "delivery_info": delivery_data.get("primary", ""),
-            "secondary_delivery_info": delivery_data.get("secondary", "")
-        }
-        group_results.append(result)
-
-        if "Error" in result["delivery_info"] or "Not found" in result["delivery_info"]:
-            consecutive_pincode_failures += 1
-        else:
-            consecutive_pincode_failures = 0
-
-    return group_results
+# In[1]:
 
 
-# ==============================================================================
-#  THE REFACTORED SCRAPER FUNCTION
-# ==============================================================================
 async def main_scraper_func(input_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Main scraper function refactored to accept and return a DataFrame.
-    It no longer handles file I/O.
-    """
+    """Main function with corrected advanced failure handling and pop-up handling."""
     start_time = time.monotonic()
 
-    # This list will store results from all passes.
-    # The drop_duplicates at the end ensures we only keep the latest result for each item.
+    # try:
+    #     input_df = pd.read_csv("input_file_test.csv")
+    #    # print("Loaded file 'input_file.csv' ")
+    # except FileNotFoundError:
+    #     print("Error: 'input_file.csv' not found. Please create it and run again.")
+    #     return
+
+    input_df = final_df.copy()
+
     all_results_list = []
 
     # --- Two-pass retry loop ---
     for pass_num in [1, 2]:
-        tasks_df = pd.DataFrame() # Initialize an empty DataFrame for tasks
         if pass_num == 1:
             tasks_df = input_df
             print("\n" + "="*20 + " STARTING PASS 1 " + "="*20)
         else:
-            # Create a DataFrame from the results of the previous pass
-            if not all_results_list:
-                print("\nNo results from Pass 1 to check for failures.")
-                break
-
             pass_1_df = pd.DataFrame(all_results_list)
-            # Filter for tasks that failed in the first pass
             tasks_df = pass_1_df[pass_1_df['delivery_info'].str.startswith("Error:", na=False)].copy()
 
             if tasks_df.empty:
                 print("\nNo failed tasks to retry. All tasks succeeded in the first pass.")
                 break
 
+            # Rebuild the main list to only contain the SUCCEEDED tasks from Pass 1.
+            # This prevents duplicate entries for failed tasks.
+            successful_pass_1_df = pass_1_df[~pass_1_df['delivery_info'].str.startswith("Error:", na=False)]
+            all_results_list = successful_pass_1_df.to_dict('records')
+
             print("\n" + "="*20 + f" STARTING PASS 2: RETRYING {len(tasks_df)} FAILED TASKS " + "="*20)
 
         consecutive_url_failures = 0
 
-        # NOTE: For deployment (e.g., Streamlit Cloud), change headless=False to headless=True
         async with async_playwright() as p:
-           # browser = await p.chromium.launch(channel="chrome", headless=False)
-            browser = await p.chromium.launch(headless=True,args=['--no-sandbox','--disable-dev-shm-usage'])
+            browser = await p.chromium.launch(channel="chrome", headless=True)
 
-            for search_term, group in tasks_df.groupby('style_name'):
+            for url, group in tasks_df.groupby('product_url'):
                 if consecutive_url_failures >= 3:
                     print("\n!!! 3 consecutive URL failures. Aborting this pass. !!!")
                     break
 
-                context = await browser.new_context(user_agent=random.choice(USER_AGENTS),
-                                                    geolocation={'longitude': 77.216721, 'latitude': 28.644800}, # Example: New Delhi
-                                                    permissions=['geolocation']) 
+                context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
                 page = await context.new_page()
-
-                #await stealth_async(page)
 
                 try:
                     site = group.iloc[0]["site_name"]
-                    print(f"\n[Pass {pass_num}] Processing product: {search_term} on {site}...")
+                    style_name = group.iloc[0]["style_name"]
+                    print(f"\n[Pass {pass_num}] Navigating to {style_name} on {site}...")
 
-                    # Call your core scraping logic function
-                    #results_for_group = await search_and_scrape_nykaa(page, search_term, group)
-                    results_for_group = await search_and_scrape_nykaa(page, site, search_term, group)
-                    all_results_list.extend(results_for_group)
-
+                    await page.goto(url, wait_until="domcontentloaded", timeout=20000)
                     consecutive_url_failures = 0
 
+                    # Check if the product is unavailable before checking pincodes.
+                    config = SITE_CONFIG.get(site, {})
+                    unavailable_selector = config.get("unavailable_selector")
+                    if unavailable_selector:
+                        try:
+                            # Use a short timeout to quickly check for the "Notify Me" button.
+                            await page.locator(unavailable_selector).first.wait_for(state="visible", timeout=1000)
+                            print(f"--- Product is unavailable. Skipping all pincodes for this URL. ---")
+                            # Mark all pincodes for this URL as unavailable and continue to the next URL.
+                            for _, row in group.iterrows():
+                                all_results_list.append({
+                                   # "master_category": row["master_category"], "article_type": row["article_type"],
+                                    "style_name": row["style_name"], "site_name": site,
+                                    "product_url": url, "pincode": row["pincode"],
+                                    "delivery_info": "Product Unavailable", "secondary_delivery_info": ""
+                                })
+                            continue # Skip to the next product URL
+                        except Exception:
+                            # If the selector is not found, the product is available. Proceed normally.
+                            pass
+
+                    # *** ADDED POP-UP CHECK HERE ***
+                    # After the page has loaded, check for and close any pop-ups.
+                    await check_and_close_intermittent_popup(page)
+
+                    consecutive_pincode_failures = 0
+
+                    for index, row in group.iterrows():
+                        if consecutive_pincode_failures >= 3:
+                            print(f"--- 3 consecutive pincode failures for {style_name}. ABORTING THIS URL. ---")
+                            remaining_rows = group.iloc[index:]
+                            for _, remaining_row in remaining_rows.iterrows():
+                                all_results_list.append({
+                                   # "master_category": remaining_row["master_category"], "article_type": remaining_row["article_type"],
+                                    "style_name": remaining_row["style_name"], "site_name": remaining_row["site_name"],
+                                    "product_url": url, "pincode": remaining_row["pincode"],
+                                    "delivery_info": "Error: Aborted due to 3 consecutive pincode failures", "secondary_delivery_info": ""
+                                })
+                            break
+
+                        pincode = str(row["pincode"])
+                        delivery_data = await scrape_pincode_on_page(page, site, pincode)
+
+                        result = {
+                           # "master_category": row["master_category"], "article_type": row["article_type"],
+                            "style_name": row["style_name"], "site_name": site,
+                            "product_url": url, "pincode": pincode,
+                            "delivery_info": delivery_data.get("primary", ""),
+                            "secondary_delivery_info": delivery_data.get("secondary", "")
+                        }
+                        all_results_list.append(result)
+
+                        if "Error" in result["delivery_info"] or "Not found" in result["delivery_info"]:
+                            consecutive_pincode_failures += 1
+                        else:
+                            consecutive_pincode_failures = 0
+
                 except Exception as e:
-                    print(f"!!! Failed to process product '{search_term}'. Error: {e}")
+                    print(f"!!! Failed to process URL {url}. Error: {e}")
                     consecutive_url_failures += 1
-                    # Log an error for all pincodes in this group
                     for _, row in group.iterrows():
                         all_results_list.append({
-                            "master_category": row.get("master_category", ""), "article_type": row.get("article_type", ""),
+                           # "master_category": row["master_category"], "article_type": row["article_type"],
                             "style_name": row["style_name"], "site_name": row["site_name"],
-                            "product_url": "N/A - Search Failed", "pincode": row["pincode"],
-                            "delivery_info": f"Error: Failed during search - {e}", "secondary_delivery_info": ""
+                            "product_url": url, "pincode": row["pincode"],
+                            "delivery_info": f"Error: Failed to load page - {e}", "secondary_delivery_info": ""
                         })
                 finally:
                     await context.close()
 
             await browser.close()
 
-    # --- Post-processing and returning the final DataFrame ---
-    if not all_results_list:
-        print("Warning: No results were generated from the scrape.")
-        return pd.DataFrame() # Return an empty DataFrame if nothing was scraped
+        # if pass_num == 2 and consecutive_url_failures >= 3:
+        #     print("\n!!! Aborted Pass 2 due to 3 consecutive URL failures. Exiting program. !!!")
+        #     final_df = pd.DataFrame(all_results_list).drop_duplicates(subset=['product_url', 'pincode'], keep='last')
 
-    # Use drop_duplicates to keep the successful result from Pass 2 over the failed result from Pass 1
-    final_results_df = pd.DataFrame(all_results_list).drop_duplicates(subset=['style_name', 'pincode'], keep='last')
+        #     final_df['scrape_date'] = pd.to_datetime(date.today())
+        #     final_df['delivery_date'] = final_df.apply(extract_delivery_date, axis=1)
+        #     delivery_dates = pd.to_datetime(final_df['delivery_date'], errors='coerce')
+        #     final_df['days_to_delivery'] = (delivery_dates - final_df['scrape_date']).dt.days
 
-    # Perform final data processing
+        #     final_df.to_csv("delivery_speed_output_INCOMPLETE_nykaa.csv", index=False)
+        #     print("\nScraping partially done. Results saved to 'delivery_speed_output_INCOMPLETE.csv'")
+        #     duration = time.monotonic() - start_time
+        #     minutes = int(duration // 60)
+        #     seconds = int(duration % 60)
+
+        #     print("\n" + "="*50)
+        #     print(f"Total script execution time: {minutes} minutes and {seconds} seconds.")
+        #     print("="*50)
+        #     return
+
+    final_results_df = pd.DataFrame(all_results_list).drop_duplicates(subset=['product_url', 'pincode'], keep='last')
+
     final_results_df['scrape_date'] = pd.to_datetime(date.today())
     final_results_df['delivery_date'] = final_results_df.apply(extract_delivery_date, axis=1)
     delivery_dates = pd.to_datetime(final_results_df['delivery_date'], errors='coerce')
     final_results_df['days_to_delivery'] = (delivery_dates - final_results_df['scrape_date']).dt.days
 
+    final_results_df.to_csv("serviceability_check_nykaa.csv", index=False)
+    print("\nScraping complete. Results saved to 'serviceability_check_nykaa.csv'")
+
     duration = time.monotonic() - start_time
-    minutes, seconds = divmod(duration, 60)
+    minutes = int(duration // 60)
+    seconds = int(duration % 60)
+
     print("\n" + "="*50)
-    print(f"Scraper function execution time: {int(minutes)} minutes and {int(seconds)} seconds.")
+    print(f"Total script execution time: {minutes} minutes and {seconds} seconds.")
     print("="*50)
 
-    # CHANGED: Return the DataFrame instead of writing to a file
     return final_results_df
-
-
-# In[39]:
-
-
-# ==============================================================================
-#  OPTIONAL: TEST BLOCK TO RUN THIS SCRIPT STANDALONE
-# ==============================================================================
-
-# # Cell 2: Create input and run the scraper
-# import pandas as pd
-
-# # Create a dummy input DataFrame, just like Streamlit would
-# test_data = {
-#     'master_category': ['Apparel', 'Apparel'],
-#     'article_type': ['Jeans', 'Jeans'],
-#     'style_name': ['H&M Women Straight High Jeans', 'H&M Women Straight High Jeans'],
-#     'site_name': ['Nykaa', 'Nykaa'],
-#     'pincode': ['201301', '700020']
-# }
-# test_df = pd.DataFrame(test_data)
-
-# print("Starting the scrape from the notebook...")
-
-# # Use 'await' directly on the function call
-# # DO NOT use asyncio.run() here
-# results_df = asyncio.run(main_scraper_func(test_df))
-
-# print("Scraping complete!")
-# print("\n--- SCRAPER FUNCTION RETURNED THE FOLLOWING DATAFRAME ---")
-# print(results_df)
-
-
-# if __name__ == '__main__':
-#     # This block allows you to test your scraper without running the Streamlit app.
-#     # It will only run when you execute `python scraper.py` directly.
-
-#     # 1. Create a dummy input DataFrame, just like Streamlit would
-#     test_data = {
-#         'master_category': ['Apparel'],
-#         'article_type': ['Jeans'],
-#         'style_name': ['H&M Women Straight High Jeans'],
-#         'site_name': ['Nykaa'],
-#         'pincode': ['201301']
-#     }
-#     test_df = pd.DataFrame(test_data)
-
-#     print("--- RUNNING SCRAPER IN STANDALONE TEST MODE ---")
-
-#     # 2. Call the scraper function with the test data
-#     results_df = await main_scraper_func(test_df)
-
-#     # 3. Print the results to the console
-#     print("Scraping complete!")
-#     print("\n--- SCRAPER FUNCTION RETURNED THE FOLLOWING DATAFRAME ---")
-#     print(results)
-
-
-# In[ ]:
 
 
 
